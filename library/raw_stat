@@ -1,0 +1,9 @@
+#!/bin/bash
+eval $(sed -e "s/\s?\([^=]+\)\s?=\s?\(\x22\([^\x22]+\)\x22|\x27\([^\x27]+\)\x27|\(\S+\)\)\s?/\1='\2'/p" $1)
+if [ -e $path ]; then
+  exists="true"
+else
+  exists="false"
+fi
+
+echo "{\"changed\": false, \"stat\": {\"exists\": "$exists"}}"

@@ -1,0 +1,2 @@
+#!/bin/bash
+LD_LIBRARY_PATH={{ coreos_pypy_install_path }}/lib:$LD_LIBRARY_PATH exec {{ coreos_pypy_install_path }}/bin/{{ item.src }} "$@"

@@ -1,0 +1,10 @@
+---
+coreos_pypy_version: 2.4.0
+
+coreos_pypy_src_path: /opt/src
+coreos_pypy_install_path: /opt/pypy-{{ coreos_pypy_version }}
+
+coreos_pypy_binary_dirname: pypy-{{ coreos_pypy_version }}-linux64
+coreos_pypy_binary_tarball_name: "{{ coreos_pypy_binary_dirname }}.tar.bz2"
+coreos_pypy_binary_tarball_url: https://bitbucket.org/pypy/pypy/downloads/{{ coreos_pypy_binary_tarball_name }}
+coreos_pypy_binary_tarball_path: "{{ coreos_pypy_src_path }}/{{ coreos_pypy_binary_tarball_name }}"

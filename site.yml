@@ -1,0 +1,7 @@
+---
+- name: Setup CoreOS kubernetes cluster.
+  hosts: all
+  gather_facts: no
+  roles:
+    - role: coreos-pypy
+      sudo: yes

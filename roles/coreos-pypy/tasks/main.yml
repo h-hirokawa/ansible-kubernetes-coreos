@@ -1,0 +1,73 @@
+---
+- name: Check src directory exists.
+  raw_stat:
+    path: "{{ coreos_pypy_src_path }}"
+  register: coreos_pypy_src_stat
+
+- name: Create src directory.
+  raw: mkdir -p "{{ coreos_pypy_src_path }}"
+  changed_when: yes
+  when: not coreos_pypy_src_stat.stat.exists
+
+- name: Check pypy tarball exists.
+  raw_stat:
+    path: "{{ coreos_pypy_binary_tarball_path }}"
+  register: coreos_pypy_tarball_stat
+
+- name: Download pypy.
+  raw: wget -P "{{ coreos_pypy_src_path }}" "{{ coreos_pypy_binary_tarball_url }}"
+  changed_when: yes
+  when: not coreos_pypy_tarball_stat.stat.exists
+
+- name: Check pypy install path exists.
+  raw_stat:
+    path: "{{ coreos_pypy_install_path }}"
+  register: coreos_pypy_install_path_stat
+
+- name: Extract pypy tarball.
+  raw: tar -xf "{{ coreos_pypy_binary_tarball_path }}"
+  changed_when: yes
+  when: not coreos_pypy_install_path_stat.stat.exists
+
+- name: Move pypy directory to install path.
+  raw: mv "{{ coreos_pypy_binary_dirname }}" "{{ coreos_pypy_install_path }}"
+  changed_when: yes
+  when: not coreos_pypy_install_path_stat.stat.exists
+
+- name: Create pypy lib directory.
+  raw: "mkdir -p {{ coreos_pypy_install_path }}/lib"
+  changed_when: yes
+
+- name: Create symlink of libtinfo.so.5.
+  raw: ln -snf /lib64/libncurses.so.5.9 {{ coreos_pypy_install_path }}/lib/libtinfo.so.5
+  changed_when: yes
+
+- name: Check pip exists.
+  raw_stat:
+    path: "{{ coreos_pypy_install_path }}/bin/pip"
+  register: coreos_pypy_pip_stat
+
+- name: Install pip.
+  raw: curl -kL https://bootstrap.pypa.io/get-pip.py | LD_LIBRARY_PATH={{ coreos_pypy_install_path }}/lib {{ coreos_pypy_install_path }}/bin/pypy
+  changed_when: yes
+  when: not coreos_pypy_pip_stat.stat.exists
+
+- name: Set ansible_python_interpreter to use pypy.
+  set_fact:
+    ansible_python_interpreter: "LD_LIBRARY_PATH={{ coreos_pypy_install_path }}/lib {{ coreos_pypy_install_path }}/bin/pypy"
+
+- name: Create /opt/bin.
+  file:
+    path: /opt/bin
+    state: directory
+
+- name: Set python and pip shims.
+  template:
+    src: python_shim.j2
+    dest: /opt/bin/{{ item.dest }}
+    mode: 0755
+  with_items:
+    - src: pypy
+      dest: python
+    - src: pip
+      dest: pip
