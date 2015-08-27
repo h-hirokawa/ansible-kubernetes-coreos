@@ -1,0 +1,43 @@
+---
+- name: systemd daemon-reload
+  command: systemctl daemon-reload
+
+- name: restart setup-network-environment
+  service:
+    name: setup-network-environment.service
+    state: restarted
+
+- name: restart etcd2
+  service:
+    name: etcd2.service
+    state: restarted
+
+- name: restart docker-cache
+  service:
+    name: docker-cache.service
+    state: restarted
+
+- name: restart flanneld
+  service:
+    name: flanneld.service
+    state: restarted
+
+- name: restart docker
+  service:
+    name: docker.service
+    state: restarted
+
+- name: restart kube-apiserver
+  service:
+    name: kube-apiserver.service
+    state: restarted
+
+- name: restart kube-controller-manager
+  service:
+    name: kube-controller-manager.service
+    state: restarted
+
+- name: restart kube-scheduler
+  service:
+    name: kube-scheduler.service
+    state: restarted

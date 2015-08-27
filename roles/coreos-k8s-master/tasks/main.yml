@@ -1,0 +1,114 @@
+---
+- debug:
+    var: hostvars[groups['coreos-etcd'][0]]
+
+- name: Generate kube-serviceaccount.key
+  command: openssl genrsa -out {{ ansible_user_dir }}/kube-serviceaccount.key 2048
+  args:
+    creates: "{{ ansible_user_dir }}/kube-serviceaccount.key"
+
+- name: Set wupiao script.
+  copy:
+    src: wupiao
+    dest: /opt/bin/wupiao
+    mode: 0755
+
+- name: Create drop-in directories.
+  file:
+    path: /run/systemd/system/{{ item }}.d
+    state: directory
+  with_items:
+    - etcd2.service
+    - fleet.service
+    - flanneld.service
+    - docker.service
+
+- name: Set setup-network-environment.service unit.
+  template:
+    src: setup-network-environment.service.j2
+    dest: /run/systemd/system/setup-network-environment.service
+  notify:
+    - systemd daemon-reload
+    - restart setup-network-environment
+
+- name: Set docker-cache.service unit.
+  template:
+    src: docker-cache.service.j2
+    dest: /run/systemd/system/docker-cache.service
+  notify:
+    - systemd daemon-reload
+    - restart docker-cache
+
+- name: Set etcd2 drop-in.
+  template:
+    src: etcd2.30-ansible.conf.j2
+    dest: /run/systemd/system/etcd2.service.d/30-ansible.conf
+  notify:
+    - systemd daemon-reload
+    - restart etcd2
+
+- name: Set fleet drop-in.
+  template:
+    src: fleet.30-ansible.conf.j2
+    dest: /run/systemd/system/fleet.service.d/30-ansible.conf
+  notify:
+    - systemd daemon-reload
+    - restart fleet
+
+- name: Set flanneld drop-in.
+  template:
+    src: flanneld.30-ansible.conf.j2
+    dest: /run/systemd/system/flanneld.service.d/30-ansible.conf
+  notify:
+    - systemd daemon-reload
+    - restart flanneld
+
+- name: Set docker drop-in.
+  template:
+    src: docker.30-ansible.conf.j2
+    dest: /run/systemd/system/docker.service.d/30-ansible.conf
+  notify:
+    - systemd daemon-reload
+    - restart docker
+
+- name: Set kube-apiserver.service unit.
+  template:
+    src: kube-apiserver.service.j2
+    dest: /run/systemd/system/kube-apiserver.service
+  notify:
+    - systemd daemon-reload
+    - restart kube-apiserver
+
+- name: Set kube-controller-manager.service unit.
+  template:
+    src: kube-controller-manager.service.j2
+    dest: /run/systemd/system/kube-controller-manager.service
+  notify:
+    - systemd daemon-reload
+    - restart kube-controller-manager
+
+- name: Set kube-scheduler.service unit.
+  template:
+    src: kube-scheduler.service.j2
+    dest: /run/systemd/system/kube-scheduler.service
+  notify:
+    - systemd daemon-reload
+    - restart kube-scheduler
+
+- name: Start required services.
+  service:
+    name: "{{ item.name }}"
+    state: started
+    enabled: yes
+  with_items:
+    - name: rpcbind.service
+    - name: rpc-statd.service
+    - name: setup-network-environment.service
+    - name: etcd2.service
+    - name: docker-cache.service
+    - name: fleet.service
+    - name: flanneld.service
+    - name: docker.service
+    - name: kube-apiserver.service
+    - name: kube-controller-manager.service
+    - name: kube-scheduler.service

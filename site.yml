@@ -1,7 +1,15 @@
 ---
-- name: Setup CoreOS kubernetes cluster.
+- name: CoreOS initial settings.
   hosts: all
   gather_facts: no
+  sudo: yes
   roles:
-    - role: coreos-pypy
-      sudo: yes
+    - coreos-pypy
+
+- name: Setup k8s master.
+  hosts: coreos-k8s-master
+  vars:
+    ansible_python_interpreter: /opt/bin/python
+  sudo: yes
+  roles:
+    - coreos-k8s-master

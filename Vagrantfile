@@ -140,6 +140,9 @@ Vagrant.configure("2") do |config|
 
       if i == $num_instances
         config.vm.provision "ansible" do |ansible|
+          ansible.groups = {
+            "coreos-k8s-master" => ["%s-01" % [$instance_name_prefix]],
+          }
           ansible.limit = "all"
           ansible.playbook = "site.yml"
           if ENV["ANSIBLE_VERBOSE"]
