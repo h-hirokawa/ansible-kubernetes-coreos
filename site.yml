@@ -12,4 +12,14 @@
     ansible_python_interpreter: /opt/bin/python
   sudo: yes
   roles:
+    - coreos-k8s-common
     - coreos-k8s-master
+
+- name: Setup k8s minion.
+  hosts: coreos-k8s-minion
+  vars:
+    ansible_python_interpreter: /opt/bin/python
+  sudo: yes
+  roles:
+    - coreos-k8s-common
+    - coreos-k8s-minion

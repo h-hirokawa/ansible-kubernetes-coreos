@@ -1,17 +1,8 @@
 ---
-- debug:
-    var: hostvars[groups['coreos-etcd'][0]]
-
 - name: Generate kube-serviceaccount.key
   command: openssl genrsa -out {{ ansible_user_dir }}/kube-serviceaccount.key 2048
   args:
     creates: "{{ ansible_user_dir }}/kube-serviceaccount.key"
-
-- name: Set wupiao script.
-  copy:
-    src: wupiao
-    dest: /opt/bin/wupiao
-    mode: 0755
 
 - name: Create drop-in directories.
   file:
@@ -22,14 +13,6 @@
     - fleet.service
     - flanneld.service
     - docker.service
-
-- name: Set setup-network-environment.service unit.
-  template:
-    src: setup-network-environment.service.j2
-    dest: /run/systemd/system/setup-network-environment.service
-  notify:
-    - systemd daemon-reload
-    - restart setup-network-environment
 
 - name: Set docker-cache.service unit.
   template:
@@ -101,9 +84,6 @@
     state: started
     enabled: yes
   with_items:
-    - name: rpcbind.service
-    - name: rpc-statd.service
-    - name: setup-network-environment.service
     - name: etcd2.service
     - name: docker-cache.service
     - name: fleet.service

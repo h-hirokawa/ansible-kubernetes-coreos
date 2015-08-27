@@ -1,0 +1,5 @@
+[Service]
+Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001"
+Environment="ETCD_ADVERTISE_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001"
+Environment="ETCD_INITIAL_CLUSTER=master=http://{{ hostvars[groups['coreos-k8s-master'][0]].ansible_env.COREOS_PRIVATE_IPV4 }}:2380"
+Environment="ETCD_PROXY=on"

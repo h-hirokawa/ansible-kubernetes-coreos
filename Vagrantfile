@@ -142,6 +142,7 @@ Vagrant.configure("2") do |config|
         config.vm.provision "ansible" do |ansible|
           ansible.groups = {
             "coreos-k8s-master" => ["%s-01" % [$instance_name_prefix]],
+            "coreos-k8s-minion" => (2..$num_instances).map {|j| "%s-%02d" % [$instance_name_prefix, j]},
           }
           ansible.limit = "all"
           ansible.playbook = "site.yml"

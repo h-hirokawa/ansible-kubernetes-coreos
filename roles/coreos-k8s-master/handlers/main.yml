@@ -2,11 +2,6 @@
 - name: systemd daemon-reload
   command: systemctl daemon-reload
 
-- name: restart setup-network-environment
-  service:
-    name: setup-network-environment.service
-    state: restarted
-
 - name: restart etcd2
   service:
     name: etcd2.service
@@ -20,6 +15,11 @@
 - name: restart flanneld
   service:
     name: flanneld.service
+    state: restarted
+
+- name: restart fleet
+  service:
+    name: fleet.service
     state: restarted
 
 - name: restart docker

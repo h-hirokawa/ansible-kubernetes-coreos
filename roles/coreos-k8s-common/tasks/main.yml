@@ -1,0 +1,22 @@
+---
+- name: Set wupiao script.
+  copy:
+    src: wupiao
+    dest: /opt/bin/wupiao
+    mode: 0755
+
+- name: Set setup-network-environment.service unit.
+  copy:
+    src: setup-network-environment.service.j2
+    dest: /run/systemd/system/setup-network-environment.service
+  notify:
+    - systemd daemon-reload
+    - restart setup-network-environment
+
+- name: Start required services.
+  service:
+    name: "{{ item.name }}"
+    state: started
+    enabled: yes
+  with_items:
+    - name: setup-network-environment.service
