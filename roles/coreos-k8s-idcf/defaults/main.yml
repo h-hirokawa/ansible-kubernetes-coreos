@@ -1,0 +1,5 @@
+---
+coreos_k8s_idcf_prefix: k8s-cluster
+coreos_k8s_idcf_vm_spec: light.S1
+coreos_k8s_idcf_image: CoreOS (stable) 64-bit with PyPy
+coreos_k8s_idcf_num_minions: 2

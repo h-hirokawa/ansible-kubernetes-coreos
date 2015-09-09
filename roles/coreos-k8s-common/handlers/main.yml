@@ -1,8 +1,0 @@
----
-- name: systemd daemon-reload
-  command: systemctl daemon-reload
-
-- name: restart setup-network-environment
-  service:
-    name: setup-network-environment.service
-    state: restarted

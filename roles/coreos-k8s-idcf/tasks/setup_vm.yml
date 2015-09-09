@@ -1,0 +1,36 @@
+---
+- name: Create Instance.
+  cs_instance:
+    name: "{{ item }}"
+    hypervisor: VMware
+    template: "{{ coreos_k8s_idcf_image }}"
+    service_offering: "{{ coreos_k8s_idcf_vm_spec }}"
+    ssh_key: "{{ coreos_k8s_idcf_prefix }}"
+    poll_async: no
+  register: coreos_k8s_idcf_vm_status
+
+- block:
+  - name: Add global ip.
+    cs_ip_address:
+    register: coreos_k8s_idcf_vm_ip
+
+  - name: Set static nat.
+    cs_staticnat:
+      ip_address: "{{ coreos_k8s_idcf_vm_ip.ip_address }}"
+      vm: "{{ item }}"
+  when: not coreos_k8s_idcf_vm_status.get('public_ip')
+
+- name: Open ssh port.
+  cs_firewall:
+    ip_address: "{{ coreos_k8s_idcf_vm_status.get('public_ip', coreos_k8s_idcf_vm_ip.ip_address) }}"
+    port: "{{ item.get('port') }}"
+    protocol: "{{ item.get('protocol', 'tcp') }}"
+    cidr: "{{ item.get('cidr', firewall_cidr) }}"
+  with_items: ports
+
+- name: Open icmp.
+  cs_firewall:
+    ip_address: "{{ coreos_k8s_idcf_vm_status.get('public_ip', coreos_k8s_idcf_vm_ip.ip_address) }}"
+    protocol: icmp
+    icmp_type: 8
+    icmp_code: 0

@@ -1,5 +1,27 @@
 #!/bin/bash
-eval $(sed -e "s/\s?\([^=]+\)\s?=\s?\(\x22\([^\x22]+\)\x22|\x27\([^\x27]+\)\x27|\(\S+\)\)\s?/\1='\2'/p" $1)
+# WANT_JSON
+
+ANSIBLE_VERSION="<<ANSIBLE_VERSION>>"
+
+# jqがなかったらエラー
+if ! type jq >/dev/null 2>&1; then
+    echo "{\"failed\": true, \"msg\": \"jq not found.\"}"
+    exit 1
+fi
+
+# v1の場合は$1に引数ファイルのパスが入る
+if [[ $ANSIBLE_VERSION == 1.* ]]; then
+    MODULE_COMPLEX_ARGS=$(cat $1)
+# v2の場合はINCLUDE_ANSIBLE_MODULE_WINDOWS_ARGSを使う
+else
+    MODULE_COMPLEX_ARGS=$(cat << 'EOF'
+<<INCLUDE_ANSIBLE_MODULE_WINDOWS_ARGS>>
+EOF
+                       )
+fi
+
+path=$(echo $MODULE_COMPLEX_ARGS | jq -r '.path')
+
 if [ -e $path ]; then
   exists="true"
 else

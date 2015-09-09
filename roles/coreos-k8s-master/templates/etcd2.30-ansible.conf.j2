@@ -1,9 +1,0 @@
-[Service]
-Environment="ETCD_NAME=master"
-Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001"
-Environment="ETCD_ADVERTISE_CLIENT_URLS=http://{{ ansible_env.COREOS_PRIVATE_IPV4 }}:2379,http://{{ ansible_env.COREOS_PRIVATE_IPV4 }}:4001"
-Environment="ETCD_INITIAL_CLUSTER_TOKEN=d9ae54c52f2c00d0b8a550cfeeff97a7"
-Environment="ETCD_LISTEN_PEER_URLS=http://{{ ansible_env.COREOS_PRIVATE_IPV4 }}:2380,http://{{ ansible_env.COREOS_PRIVATE_IPV4 }}:7001"
-Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{ ansible_env.COREOS_PRIVATE_IPV4 }}:2380"
-Environment="ETCD_INITIAL_CLUSTER=master=http://{{ ansible_env.COREOS_PRIVATE_IPV4 }}:2380"
-Environment="ETCD_INITIAL_CLUSTER_STATE=new"

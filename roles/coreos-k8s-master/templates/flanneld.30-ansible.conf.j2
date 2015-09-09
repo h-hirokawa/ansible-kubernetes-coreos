@@ -1,5 +1,0 @@
-[Unit]
-Requires=etcd2.service
-[Service]
-Environment="FLANNELD_IFACE={{ ansible_env.COREOS_PUBLIC_IPV4 }}"
-ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "vxlan"}}'

@@ -1,4 +1,27 @@
 ---
+- name: Check raw_stat can work.
+  raw_stat:
+    path: /
+  ignore_errors: yes
+  register: check_raw_stat_work
+
+- block:
+  - name: Update CoreOS if jq not exists.
+    raw: update_engine_client -update
+
+  - name: Reboot CoreOS
+    raw: shutdown -r now "Reboot triggered by Ansible"
+    ignore_errors: yes
+
+  - name: Wait for ssh come up.
+    local_action: wait_for
+    args:
+      host: "{{ ansible_ssh_host }}"
+      port: 22
+      delay: 10
+    sudo: no
+  when: check_raw_stat_work|failed
+
 - name: Check src directory exists.
   raw_stat:
     path: "{{ coreos_pypy_src_path }}"
@@ -19,20 +42,24 @@
   changed_when: yes
   when: not coreos_pypy_tarball_stat.stat.exists
 
-- name: Check pypy install path exists.
+- name: Check pypy binary exists.
   raw_stat:
-    path: "{{ coreos_pypy_install_path }}"
-  register: coreos_pypy_install_path_stat
+    path: "{{ coreos_pypy_install_path }}/bin/pypy"
+  register: coreos_pypy_binary_stat
 
-- name: Extract pypy tarball.
-  raw: tar -xf "{{ coreos_pypy_binary_tarball_path }}"
-  changed_when: yes
-  when: not coreos_pypy_install_path_stat.stat.exists
+- block:
+  - name: Clean up pypy install directory.
+    raw: if [ -e "{{ coreos_pypy_install_path }}" ]; then rm -r "{{ coreos_pypy_install_path }}"; fi
+    changed_when: yes
 
-- name: Move pypy directory to install path.
-  raw: mv "{{ coreos_pypy_binary_dirname }}" "{{ coreos_pypy_install_path }}"
-  changed_when: yes
-  when: not coreos_pypy_install_path_stat.stat.exists
+  - name: Extract pypy tarball.
+    raw: tar -xf "{{ coreos_pypy_binary_tarball_path }}"
+    changed_when: yes
+
+  - name: Move pypy directory to install path.
+    raw: mv "{{ coreos_pypy_binary_dirname }}" "{{ coreos_pypy_install_path }}"
+    changed_when: yes
+  when: not coreos_pypy_binary_stat.stat.exists
 
 - name: Create pypy lib directory.
   raw: "mkdir -p {{ coreos_pypy_install_path }}/lib"

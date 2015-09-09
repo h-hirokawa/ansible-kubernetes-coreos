@@ -1,0 +1,37 @@
+---
+- name: Create ssh key pair.
+  cs_sshkeypair:
+    name: "{{ coreos_k8s_idcf_prefix }}"
+    public_key: "{{ lookup('file', '{}/.ssh/k8s_key.pub'.format(playbook_dir)) }}"
+  register: coreos_k8s_idcf_keypair
+
+- include: setup_vm.yml
+  vars:
+    item: "{{ coreos_k8s_idcf_prefix}}-master"
+    ports:
+      - port: 22
+      - port: 8080
+
+- include: setup_vm.yml
+  vars:
+    ports:
+      - port: 22
+      - port: 80
+        cidr: 0.0.0.0/0
+  with_sequence: start=1 end={{ coreos_k8s_idcf_num_minions }} format="{{ coreos_k8s_idcf_prefix}}-minion-%d"
+
+- include: wait_vm.yml
+  vars:
+    item: "{{ coreos_k8s_idcf_prefix }}-master"
+    inventory_groups:
+      - "{{ group_name }}"
+      - coreos-k8s-master
+    is_master_node: yes
+
+- include: wait_vm.yml
+  vars:
+    inventory_groups:
+      - "{{ group_name }}"
+      - coreos-k8s-minion
+    is_master_node: no
+  with_sequence: start=1 end={{ coreos_k8s_idcf_num_minions }} format="{{ coreos_k8s_idcf_prefix}}-minion-%d"

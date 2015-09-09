@@ -1,0 +1,51 @@
+---
+- name: Create ssh key pair.
+  cs_sshkeypair:
+    name: "{{ coreos_k8s_idcf_prefix }}"
+    public_key: "{{ lookup('file', '{}/.ssh/k8s_key.pub'.format(playbook_dir)) }}"
+  register: coreos_k8s_idcf_keypair
+
+- name: Create Instance.
+  cs_instance:
+    name: coreos-pypy-base
+    hypervisor: VMware
+    template: {{ coreos_k8s_idcf_base_image }}
+    service_offering: "{{ coreos_k8s_idcf_vm_spec }}"
+    ssh_key: "{{ coreos_k8s_idcf_prefix }}"
+    poll_async: no
+  register: coreos_k8s_idcf_vm_status
+
+- block:
+  - name: Add global ip.
+    cs_ip_address:
+    register: coreos_k8s_idcf_vm_ip
+
+  - name: Set static nat.
+    cs_staticnat:
+      ip_address: "{{ coreos_k8s_idcf_vm_ip.ip_address }}"
+      vm: "{{ vm_name }}"
+  when: not coreos_k8s_idcf_vm_status.get('public_ip')
+
+- name: Open ssh port.
+  cs_firewall:
+    ip_address: "{{ coreos_k8s_idcf_vm_status.get('public_ip', coreos_k8s_idcf_vm_ip.ip_address) }}"
+    port: 22
+    protocol: tcp
+
+- name: Wait until instance created.
+  cs_instance:
+    name: "{{ item }}"
+  register: coreos_k8s_idcf_vm_status
+
+- name: Wait until ssh come up.
+  wait_for:
+    host: "{{ coreos_k8s_idcf_vm_status.public_ip }}"
+    port: 22
+
+- name: Add created instances to inventory group.
+  add_host:
+    name: "idcf-{{ coreos_k8s_idcf_vm_status.name }}"
+    ansible_ssh_host: "{{ coreos_k8s_idcf_vm_status.public_ip }}"
+    groups: "{{ ','.join(inventory_groups) }}"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/.ssh/k8s_key"
+    ansible_ssh_user: core

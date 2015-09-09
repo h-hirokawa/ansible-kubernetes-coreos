@@ -1,0 +1,23 @@
+---
+- name: Wait until instance created.
+  cs_instance:
+    name: "{{ item }}"
+  register: coreos_k8s_idcf_vm_status
+
+- name: Wait until ssh come up.
+  wait_for:
+    host: "{{ coreos_k8s_idcf_vm_status.public_ip }}"
+    port: 22
+
+- set_fact:
+    k8s_master_node_ip: "{{ coreos_k8s_idcf_vm_status.default_ip }}"
+  when: is_master_node
+
+- name: Add created instances to inventory group.
+  add_host:
+    name: "idcf-{{ coreos_k8s_idcf_vm_status.name }}"
+    ansible_ssh_host: "{{ coreos_k8s_idcf_vm_status.public_ip }}"
+    groups: "{{ ','.join(inventory_groups) }}"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/.ssh/k8s_key"
+    ansible_ssh_user: core
+    k8s_master_node_ip: "{{ k8s_master_node_ip }}"

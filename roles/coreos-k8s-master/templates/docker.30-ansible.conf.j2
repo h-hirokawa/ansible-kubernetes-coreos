@@ -1,7 +1,0 @@
-[Unit]
-# making sure that docker-cache is up and that flanneld finished
-# startup, otherwise containers won't land in flannel's network...
-Requires=docker-cache.service flanneld.service
-After=docker-cache.service flanneld.service
-[Service]
-Environment=DOCKER_OPTS='--registry-mirror=http://{{ ansible_env.COREOS_PRIVATE_IPV4 }}:5000'

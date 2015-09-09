@@ -58,3 +58,6 @@ target/
 
 # Vagrant
 .vagrant/
+
+# Private files
+.ssh/

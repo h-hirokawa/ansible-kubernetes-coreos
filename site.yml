@@ -1,6 +1,22 @@
 ---
+- name: Setup instances on cloud.
+  hosts: localhost
+  gather_facts: no
+  pre_tasks:
+    - name: Get current public ip.
+      uri:
+        url: http://ipecho.net/plain
+        return_content: yes
+      register: get_ipecho
+    - set_fact:
+        my_public_ip: "{{ get_ipecho.content }}"
+  roles:
+    - role: coreos-k8s-idcf
+      group_name: idcf
+      firewall_cidr: "{{ my_public_ip }}/32"
+
 - name: CoreOS initial settings.
-  hosts: all
+  hosts: all:!localhost
   gather_facts: no
   sudo: yes
   roles:
@@ -12,7 +28,6 @@
     ansible_python_interpreter: /opt/bin/python
   sudo: yes
   roles:
-    - coreos-k8s-common
     - coreos-k8s-master
 
 - name: Setup k8s minion.
@@ -21,5 +36,4 @@
     ansible_python_interpreter: /opt/bin/python
   sudo: yes
   roles:
-    - coreos-k8s-common
     - coreos-k8s-minion
