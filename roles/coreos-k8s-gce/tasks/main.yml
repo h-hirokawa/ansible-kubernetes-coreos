@@ -1,0 +1,31 @@
+---
+- name: Launch k8s-master instance async.
+  gce-mod:
+    instance_names: "{{ coreos_k8s_gce_prefix }}-master"
+    machine_type: "{{ coreos_k8s_gce_vm_spec }}"
+    image: "{{ coreos_k8s_gce_image }}"
+    zone: "{{ coreos_k8s_gce_zone }}"
+    metadata:
+      sshKeys: core:{{ lookup('file', '{}/.ssh/k8s_key.pub'.format(playbook_dir)) }}
+  async: 1000
+  poll: 0
+  register: create_master_job
+
+- name: Launch k8s-minion instances async.
+  gce-mod:
+    instance_names: "{{ item }}"
+    machine_type: "{{ coreos_k8s_gce_vm_spec }}"
+    image: "{{ coreos_k8s_gce_image }}"
+    zone: "{{ coreos_k8s_gce_zone }}"
+    persistent_boot_disk: yes
+    metadata:
+      sshKeys: core:{{ lookup('file', '{}/.ssh/k8s_key.pub'.format(playbook_dir)) }}
+  async: 1000
+  poll: 0
+  register: create_minion_jobs
+  with_sequence: start=1 end={{ coreos_k8s_gce_num_minions }} format="{{ coreos_k8s_gce_prefix}}-minion-%d"
+
+- include: wait_vm.yml
+  with_flattened:
+    - create_master_job
+    - create_minion_jobs.results

@@ -1,0 +1,1 @@
+{{ coreos_k8s_gce_prefix }}-master,{% for i in range(coreos_k8s_gce_num_minions) %}{{ coreos_k8s_gce_prefix }}-minion-{{ i + 1 }}{% if not loop.last %},{% endif %}{% endfor %}

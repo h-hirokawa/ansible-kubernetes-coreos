@@ -1,0 +1,31 @@
+---
+- name: Wait until job finished.
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 30
+
+- name: Set is_master flag to master instance.
+  set_fact:
+    is_master: "{{ True if job_result.instance_data.0.name == '{}-master'.format(coreos_k8s_gce_prefix) else False }}"
+
+- name: Set k8s_master_node_ip.
+  set_fact:
+    k8s_master_node_ip: "{{ job_result.instance_data.0.private_ip }}"
+  when: is_master
+
+- name: Set k8s tag.
+  gce_tag:
+    instance_name: "{{ job_result.instance_data.0.name }}"
+    zone: "{{ coreos_k8s_gce_zone }}"
+    tags: "{{ 'k8s-master' if is_master else 'k8s-minion' }}"
+
+- name: Add instance to inventory group.
+  add_host:
+    name: "gce-{{ job_result.instance_data.0.name }}"
+    ansible_ssh_host: "{{ job_result.instance_data.0.public_ip }}"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/.ssh/k8s_key"
+    groups: "{{ group_name }},{{ 'coreos-k8s-master' if is_master else 'coreos-k8s-minion' }}"
+    ansible_ssh_user: core
+    k8s_master_node_ip: "{{ k8s_master_node_ip }}"
